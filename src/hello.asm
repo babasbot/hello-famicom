@@ -20,14 +20,42 @@
 .export main
 .proc main
   LDX PPUSTATUS
+
+  ; write a palette
+
   LDX #$3f
   STX PPUADDR
   LDX #$00
   STX PPUADDR
-  LDA #$3C
+  LDA #$29
   STA PPUDATA
-  LDA #%00011110
+  LDA #$19
+  STA PPUDATA
+  LDA #$09
+  STA PPUDATA
+  LDA #$0f
+  STA PPUDATA
+
+  ; write sprite data
+
+  LDA #$70
+  STA $0200 ; Y coordinate of first sprite
+  LDA #$09
+  STA $0201 ; tile number of first sprite
+  LDA #$00
+  STA $0202 ; attributes of first sprite
+  LDA #$80
+  STA $0203 ; X coordinate of first sprite
+
+vblankwait:       ; wait for another vblank before continuing
+  BIT PPUSTATUS
+  BPL vblankwait
+
+  LDA #%10010000  ; turn on NMIs, sprites use first pattern table
+  STA PPUCTRL
+  LDA #%00011110  ; turn on screen
   STA PPUMASK
+
 forever:
   JMP forever
 .endproc
@@ -36,4 +64,4 @@ forever:
 .addr nmi_handler, reset_handler, irq_handler
 
 .segment "CHR"
-.res 8192
+.incbin "graphics.chr"
